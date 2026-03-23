@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>안농밴드 — 사용자 모바일 앱</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--primary:#FF6B35;--secondary:#FFC107;--success:#2E7D32;--info:#1565C0;--danger:#D32F2F;--bg:#F5F5F5;--card:#fff;--text:#1A1A1A;--text2:#757575;--text3:#BDBDBD;--radius:16px;--shadow:0 2px 12px rgba(0,0,0,.06);--font:'Pretendard Variable','Pretendard',-apple-system,BlinkMacSystemFont,sans-serif}
+html,body{font-family:var(--font);background:#1a1a1a;color:var(--text);height:100%;overflow:hidden}
+
+/* Phone Frame */
+.phone-frame-wrapper{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
+.phone-label{font-size:12px;color:#555;letter-spacing:1px}
+.phone-frame{width:393px;height:852px;background:#1c1c1e;border-radius:50px;padding:12px;position:relative;box-shadow:0 20px 60px rgba(0,0,0,.5);overflow:hidden}
+.phone-frame::before{content:'';position:absolute;top:12px;left:50%;transform:translateX(-50%);width:120px;height:34px;background:#1c1c1e;border-radius:0 0 18px 18px;z-index:100}
+.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:34px;background:#000;border-radius:0 0 20px 20px;z-index:101;display:flex;align-items:center;justify-content:center}
+.phone-notch::after{content:'';width:10px;height:10px;background:#1c1c1e;border-radius:50%;margin-top:4px}
+.phone-screen{width:100%;height:100%;background:var(--bg);border-radius:40px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+
+/* Status bar */
+.status-bar{height:54px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 8px;font-size:12px;font-weight:600;color:var(--text);background:var(--bg);flex-shrink:0;z-index:10}
+.status-bar .time{font-size:15px;font-weight:700}
+.status-bar .icons{display:flex;gap:4px;font-size:11px}
+
+/* Main scrollable content */
+.app-content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+.tab-pane{display:none;padding:0 20px 100px;animation:fadeUp .35s ease}
+.tab-pane.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* Bottom Nav */
+.bottom-nav{position:absolute;bottom:0;left:0;right:0;height:84px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(0,0,0,.06);display:flex;align-items:flex-start;justify-content:space-around;padding-top:8px;z-index:50}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;-webkit-tap-highlight-color:transparent;padding:4px 16px}
+.nav-item .icon{font-size:22px;transition:transform .2s}
+.nav-item .label{font-size:10px;color:var(--text2);font-weight:500;transition:color .2s}
+.nav-item.active .icon{transform:scale(1.1)}
+.nav-item.active .label{color:var(--primary);font-weight:700}
+
+/* Home indicator */
+.home-indicator{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:134px;height:5px;background:rgba(0,0,0,.15);border-radius:3px;z-index:60}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card-title{font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.section-title{font-size:22px;font-weight:800;margin:20px 0 12px;color:var(--text)}
+
+/* ===== TAB 1: Today ===== */
+.greeting{padding:16px 0 4px;font-size:24px;font-weight:800;line-height:1.3}
+.greeting-sub{font-size:14px;color:var(--text2);margin-bottom:16px}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.stat-card{background:var(--card);border-radius:14px;padding:14px;box-shadow:var(--shadow);text-align:center}
+.stat-card .emoji{font-size:20px}
+.stat-card .value{font-size:26px;font-weight:800;margin:4px 0 2px}
+.stat-card .label{font-size:11px;color:var(--text2)}
+.stat-card.hr .value{color:var(--danger)}
+.stat-card.reps .value{color:var(--info)}
+.stat-card.time .value{color:var(--primary)}
+.stat-card.temp .value{color:var(--success)}
+
+/* Score circle */
+.score-card{text-align:center;padding:24px 16px}
+.score-circle{position:relative;width:140px;height:140px;margin:0 auto 12px}
+.score-circle svg{transform:rotate(-90deg)}
+.score-circle circle{fill:none;stroke-width:10;stroke-linecap:round}
+.score-circle .bg{stroke:#eee}
+.score-circle .fg{stroke:var(--primary);transition:stroke-dashoffset 1.5s ease-out}
+.score-number{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.score-number .val{font-size:42px;font-weight:900;color:var(--primary)}
+.score-number .grade{font-size:14px;font-weight:700;color:var(--text2)}
+.score-message{font-size:14px;color:var(--text2);margin-top:4px}
+
+/* AI Chat */
+.ai-chat{background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid rgba(255,107,53,.1)}
+.ai-header{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ai-avatar{width:36px;height:36px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px}
+.ai-name{font-size:13px;font-weight:700;color:var(--primary)}
+.ai-badge{font-size:9px;background:var(--primary);color:#fff;padding:2px 6px;border-radius:8px;font-weight:600}
+.ai-bubble{background:var(--card);border-radius:14px;padding:14px;font-size:15px;line-height:1.7;color:var(--text);margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.ai-actions{display:flex;gap:8px}
+.ai-btn{flex:1;border:none;border-radius:12px;padding:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:transform .1s,opacity .1s}
+.ai-btn:active{transform:scale(.96);opacity:.8}
+.ai-btn.primary{background:var(--success);color:#fff}
+.ai-btn.secondary{background:var(--card);color:var(--text);border:1px solid #e0e0e0}
+
+/* Chat modal */
+.chat-modal{position:absolute;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:200;display:none;flex-direction:column}
+.chat-modal.open{display:flex}
+.chat-header{height:54px;display:flex;align-items:flex-end;padding:0 16px 8px;justify-content:space-between;background:var(--bg);flex-shrink:0}
+.chat-header .back{font-size:14px;color:var(--primary);cursor:pointer;font-weight:600;border:none;background:none;font-family:var(--font)}
+.chat-header .title{font-size:16px;font-weight:700}
+.chat-messages{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px}
+.chat-msg{max-width:80%;padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.6;animation:fadeUp .3s ease}
+.chat-msg.bot{background:var(--card);align-self:flex-start;border-bottom-left-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.chat-msg.user{background:var(--primary);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.chat-msg.loading{color:var(--text2);font-style:italic}
+.chat-input-bar{padding:8px 12px 30px;display:flex;gap:8px;background:var(--card);border-top:1px solid #eee}
+.chat-input-bar input{flex:1;border:1px solid #e0e0e0;border-radius:24px;padding:10px 16px;font-size:15px;font-family:var(--font);outline:none}
+.chat-input-bar input:focus{border-color:var(--primary)}
+.chat-input-bar button{width:40px;height:40px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:16px;cursor:pointer}
+
+/* Body map */
+.body-map{position:relative;width:120px;height:200px;margin:0 auto}
+.body-map svg{width:100%;height:100%}
+.body-dot{position:absolute;width:24px;height:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;animation:pulse-body 2s infinite}
+@keyframes pulse-body{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
+.body-dot.danger{background:var(--danger)}
+.body-dot.warn{background:var(--secondary)}
+.body-dot.ok{background:var(--success)}
+.body-dot.shoulder-l{top:42px;left:8px}
+.body-dot.shoulder-r{top:42px;right:8px}
+.body-dot.waist{top:100px;left:50%;transform:translateX(-50%)}
+.body-dot.knee{top:145px;left:50%;transform:translateX(-50%)}
+
+.body-tooltip{position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:4px 10px;border-radius:8px;font-size:11px;white-space:nowrap;display:none}
+
+/* Nudge timeline */
+.nudge-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f0f0}
+.nudge-item:last-child{border-bottom:none}
+.nudge-check{width:24px;height:24px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+.nudge-check.done{background:#E8F5E9;color:var(--success)}
+.nudge-check.pending{background:#F5F5F5;color:var(--text3)}
+.nudge-time{font-size:13px;font-weight:600;width:50px}
+.nudge-name{font-size:14px;flex:1}
+.nudge-tag{font-size:10px;padding:2px 6px;border-radius:6px;font-weight:600}
+.nudge-tag.done{background:#E8F5E9;color:var(--success)}
+.nudge-tag.pending{background:#FFF3E0;color:var(--primary)}
+
+/* ===== TAB 2: Diagnosis ===== */
+.exercise-card{background:linear-gradient(135deg,#E8F5E9,#F1F8E9);border:1px solid rgba(46,125,50,.1);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.exercise-tag{display:inline-block;background:var(--success);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;margin-bottom:8px}
+.exercise-list{margin:10px 0}
+.exercise-item{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:15px}
+.exercise-item .num{width:22px;height:22px;border-radius:50%;background:var(--success);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.exercise-item .dur{font-size:12px;color:var(--text2);margin-left:auto}
+.exercise-start-btn{width:100%;border:none;border-radius:14px;padding:16px;font-size:18px;font-weight:800;background:var(--success);color:#fff;cursor:pointer;font-family:var(--font);margin-top:8px}
+.exercise-start-btn:active{transform:scale(.97)}
+
+.posture-card{text-align:center;padding:20px}
+.posture-figure{font-size:64px;margin:10px 0}
+.posture-score{font-size:32px;font-weight:900;color:var(--success)}
+.posture-grade{font-size:14px;color:var(--text2);margin-top:4px}
+
+.history-item{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px}
+.history-item .date{color:var(--text2);font-size:13px}
+
+/* ===== TAB 3: Benefits ===== */
+.reward-card{background:linear-gradient(135deg,#FFF3E0,#FFF8E1);border:1px solid rgba(255,107,53,.1);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+.reward-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+.reward-row .label{font-size:14px;display:flex;align-items:center;gap:6px}
+.reward-row .value{font-size:16px;font-weight:700}
+.reward-badge{display:inline-block;background:var(--success);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;margin-left:6px}
+
+.insurance-card{border:1px solid #e0e0e0}
+.ins-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px;border-bottom:1px solid #f5f5f5}
+.ins-row:last-child{border-bottom:none}
+.ins-row .label{color:var(--text2)}
+.ins-row .value{font-weight:600}
+.ins-row.discount .value{color:var(--success)}
+.ins-row.total{border-top:2px solid var(--text);padding-top:10px;margin-top:4px}
+.ins-row.total .label{font-weight:700;color:var(--text)}
+.ins-row.total .value{color:var(--primary);font-size:18px;font-weight:800}
+
+.grade-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.grade-table th{text-align:left;padding:6px 8px;color:var(--text2);font-weight:500;border-bottom:1px solid #eee}
+.grade-table td{padding:6px 8px;border-bottom:1px solid #f5f5f5}
+.grade-table tr.current{background:#FFF3E0;font-weight:700;border-radius:8px}
+.grade-table .grade-badge{display:inline-block;width:24px;height:24px;border-radius:8px;text-align:center;line-height:24px;font-weight:800;font-size:12px;color:#fff}
+
+.report-btn{width:100%;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;background:var(--info);color:#fff;cursor:pointer;font-family:var(--font);margin:8px 0}
+
+/* Responsive - if not in frame */
+@media (max-width:420px){
+  .phone-frame-wrapper{height:auto;padding:0}
+  .phone-frame{width:100%;height:100vh;border-radius:0;padding:0}
+  .phone-screen{border-radius:0}
+  .phone-notch,.phone-label,.model-label-bottom{display:none}
+  .status-bar{padding-top:env(safe-area-inset-top,20px)}
+}
+</style>
+</head>
+<body>
+<div class="phone-frame-wrapper">
+<div class="phone-label" style="font-size:11px;color:#555;letter-spacing:1px;font-family:var(--font)">📱 안농밴드 사용자 앱</div>
+<div class="phone-frame">
+<div class="phone-notch"></div>
+<div class="phone-screen">
+
+<!-- Status Bar -->
+<div class="status-bar">
+  <span class="time">13:34</span>
+  <span class="icons">📶 📡 🔋</span>
+</div>
+
+<!-- Tab Content -->
+<div class="app-content">
+  <!-- TAB 1: 오늘 할 일 -->
+  <div class="tab-pane active" id="tab1">
+    <div class="greeting">🌾 안녕하세요,<br>김농부님</div>
+    <div class="greeting-sub">2026년 3월 23일 일요일 · ☀️ 맑음 12°C</div>
+
+    <div class="stats-grid">
+      <div class="stat-card hr"><div class="emoji">❤️</div><div class="value" id="userHr">72</div><div class="label">심박수 BPM</div></div>
+      <div class="stat-card reps"><div class="emoji">🏃</div><div class="value" id="userReps">142</div><div class="label">반복 횟수</div></div>
+      <div class="stat-card time"><div class="emoji">⏱️</div><div class="value">4h 32m</div><div class="label">작업 시간</div></div>
+      <div class="stat-card temp"><div class="emoji">🌡️</div><div class="value">26°C</div><div class="label">현장 온도</div></div>
+    </div>
+
+    <div class="card score-card">
+      <div class="card-title">🏆 오늘 이행 점수</div>
+      <div class="score-circle">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle class="bg" cx="70" cy="70" r="60" stroke-width="10" fill="none" stroke="#eee"/>
+          <circle class="fg" id="scoreFg" cx="70" cy="70" r="60" stroke-width="10" fill="none" stroke="#FF6B35" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
+        </svg>
+        <div class="score-number">
+          <div class="val" id="scoreNum">0</div>
+          <div class="grade">A등급</div>
+        </div>
+      </div>
+      <div class="score-message">S등급까지 <strong>8점</strong> 남았어요! 💪</div>
+    </div>
+
+    <div class="ai-chat">
+      <div class="ai-header">
+        <div class="ai-avatar">🧑‍🌾</div>
+        <div>
+          <div class="ai-name">안농이</div>
+          <div class="ai-badge">AI 건강 대화</div>
+        </div>
+      </div>
+      <div class="ai-bubble">할아버지, 오전에 팔을 <strong>142번</strong>이나 들어올리셨어요. 어깨가 많이 쓰였네요! 😊<br><br>어깨 스트레칭 한번 해볼까요?</div>
+      <div class="ai-actions">
+        <button class="ai-btn primary" onclick="switchTab(1)">🧘 스트레칭 시작</button>
+        <button class="ai-btn secondary" onclick="openChat()">💬 더 알아보기</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🧍 통증 인체 맵</div>
+      <div class="body-map">
+        <svg viewBox="0 0 120 200">
+          <circle cx="60" cy="22" r="14" fill="#E0E0E0"/>
+          <line x1="60" y1="36" x2="60" y2="110" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="60" y1="50" x2="25" y2="85" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="60" y1="50" x2="95" y2="85" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="60" y1="110" x2="35" y2="175" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round"/>
+          <line x1="60" y1="110" x2="85" y2="175" stroke="#E0E0E0" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+        <div class="body-dot danger shoulder-l" title="어깨 — 주의">!</div>
+        <div class="body-dot danger shoulder-r" title="어깨 — 주의">!</div>
+        <div class="body-dot warn waist" title="허리 — 경미">△</div>
+        <div class="body-dot ok knee" title="무릎 — 양호">✓</div>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:12px;color:var(--text2)">
+        🔴 어깨 주의 · 🟡 허리 경미 · 🟢 무릎 양호
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✅ 넛지 이행 현황</div>
+      <div class="nudge-item"><div class="nudge-check done">✓</div><div class="nudge-time">09:30</div><div class="nudge-name">팔교차당기기</div><div class="nudge-tag done">완료</div></div>
+      <div class="nudge-item"><div class="nudge-check done">✓</div><div class="nudge-time">10:00</div><div class="nudge-name">허리뒤틀기</div><div class="nudge-tag done">완료</div></div>
+      <div class="nudge-item"><div class="nudge-check done">✓</div><div class="nudge-time">10:30</div><div class="nudge-name">깍지끼고 가슴펴기</div><div class="nudge-tag done">완료</div></div>
+      <div class="nudge-item"><div class="nudge-check done">✓</div><div class="nudge-time">11:00</div><div class="nudge-name">전신뻗기</div><div class="nudge-tag done">완료</div></div>
+      <div class="nudge-item"><div class="nudge-check pending">·</div><div class="nudge-time">11:30</div><div class="nudge-name">어깨 스트레칭</div><div class="nudge-tag pending">예정</div></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: 카메라 진단 -->
+  <div class="tab-pane" id="tab2">
+    <div class="section-title">📷 자세 교정 & 운동</div>
+
+    <div class="exercise-card">
+      <div class="exercise-tag">🌶️ 고추 수확 후</div>
+      <div style="font-size:18px;font-weight:800;margin:4px 0">어깨 집중 스트레칭</div>
+      <div style="font-size:13px;color:var(--text2)">HAR 분석: 반복 팔 올리기 142회 감지</div>
+      <div class="exercise-list">
+        <div class="exercise-item"><span class="num">1</span> 팔교차당기기 🟢 <span class="dur">12초</span></div>
+        <div class="exercise-item"><span class="num">2</span> 팔펴고 어깨돌리기 🟢 <span class="dur">25초</span></div>
+        <div class="exercise-item"><span class="num">3</span> 깍지끼고 가슴펴기 🟢 <span class="dur">12초</span></div>
+      </div>
+      <button class="exercise-start-btn">▶ 운동 시작하기 (49초)</button>
+    </div>
+
+    <div class="card posture-card">
+      <div class="card-title">📐 MediaPipe 자세 분석</div>
+      <div class="posture-figure">🧘‍♂️</div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px">마지막 분석: 오늘 10:00</div>
+      <div class="posture-score">87%</div>
+      <div class="posture-grade">자세 정확도 · 등급 <strong style="color:var(--success)">A</strong></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 작목별 추천 운동 (210개 DB)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+        <span style="background:#FFEBEE;color:#C62828;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🌶️ 고추</span>
+        <span style="background:#E3F2FD;color:#1565C0;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🍓 딸기</span>
+        <span style="background:#E8F5E9;color:#2E7D32;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🌾 벼</span>
+        <span style="background:#FFF3E0;color:#E65100;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🍎 과수</span>
+        <span style="background:#F3E5F5;color:#6A1B9A;padding:4px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer">🐄 축산</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 운동 처방 이력</div>
+      <div class="history-item"><span>🧘 어깨 스트레칭 3회</span><span class="date">03/23</span></div>
+      <div class="history-item"><span>🧘 허리 스트레칭 5회</span><span class="date">03/22</span></div>
+      <div class="history-item"><span>🧘 전신 체조 2회</span><span class="date">03/21</span></div>
+      <div class="history-item"><span>🧘 무릎 스트레칭 4회</span><span class="date">03/20</span></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: 내 혜택 -->
+  <div class="tab-pane" id="tab3">
+    <div class="section-title">🎁 내 혜택</div>
+
+    <div class="card score-card">
+      <div class="card-title" style="justify-content:center">🏆 이행 점수</div>
+      <div class="score-circle">
+        <svg width="140" height="140" viewBox="0 0 140 140">
+          <circle cx="70" cy="70" r="60" stroke-width="10" fill="none" stroke="#eee"/>
+          <circle id="scoreFg2" cx="70" cy="70" r="60" stroke-width="10" fill="none" stroke="#FF6B35" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="68" style="transform:rotate(-90deg);transform-origin:center"/>
+        </svg>
+        <div class="score-number">
+          <div class="val" style="color:var(--primary)">82</div>
+          <div class="grade">A등급 (우수)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 등급별 혜택</div>
+      <table class="grade-table">
+        <thead><tr><th>등급</th><th>점수</th><th>월 혜택</th></tr></thead>
+        <tbody>
+          <tr><td><span class="grade-badge" style="background:#FF6B35">S</span></td><td>90+</td><td><strong>7,000원</strong></td></tr>
+          <tr class="current"><td><span class="grade-badge" style="background:#FFC107;color:#000">A</span></td><td>80~89</td><td><strong>5,000원 ✅</strong></td></tr>
+          <tr><td><span class="grade-badge" style="background:#4CAF50">B</span></td><td>70~79</td><td>3,000원</td></tr>
+          <tr><td><span class="grade-badge" style="background:#90A4AE">C</span></td><td>60~69</td><td>2,000원</td></tr>
+          <tr><td><span class="grade-badge" style="background:#BDBDBD">D</span></td><td>~59</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="reward-card">
+      <div class="card-title">🛍️ 이번 달 리워드</div>
+      <div class="reward-row"><span class="label">🛒 농협몰 쿠폰</span><span class="value">5,000원 <span class="reward-badge">적립완료</span></span></div>
+      <div class="reward-row"><span class="label">🅿️ NH멤버스 포인트</span><span class="value">2,000P <span class="reward-badge">적립완료</span></span></div>
+    </div>
+
+    <div class="card insurance-card">
+      <div class="card-title">🛡️ NH안전보험 연결</div>
+      <div class="ins-row"><span class="label">가입 상태</span><span class="value" style="color:var(--success)">✅ 가입 중</span></div>
+      <div class="ins-row"><span class="label">상품명</span><span class="value">농업인NH안전보험 (일반1형)</span></div>
+      <div class="ins-row"><span class="label">보험료 (연)</span><span class="value">91,670원</span></div>
+      <div class="ins-row discount"><span class="label">국고지원 (50%)</span><span class="value">-45,835원</span></div>
+      <div class="ins-row discount"><span class="label">이행할인 (A등급)</span><span class="value">-5,500원</span></div>
+      <div class="ins-row total"><span class="label">실납부액</span><span class="value">40,335원</span></div>
+    </div>
+
+    <button class="report-btn">📊 3월 건강 리포트 보기</button>
+    <div style="text-align:center;font-size:11px;color:var(--text3);padding:8px 0">NH농협생명 · 안농밴드 보험 연동 서비스</div>
+  </div>
+</div>
+
+<!-- Bottom Navigation -->
+<div class="bottom-nav">
+  <div class="nav-item active" onclick="switchTab(0)"><span class="icon">📋</span><span class="label">오늘 할 일</span></div>
+  <div class="nav-item" onclick="switchTab(1)"><span class="icon">📷</span><span class="label">카메라 진단</span></div>
+  <div class="nav-item" onclick="switchTab(2)"><span class="icon">🎁</span><span class="label">내 혜택</span></div>
+</div>
+<div class="home-indicator"></div>
+
+<!-- Chat Modal -->
+<div class="chat-modal" id="chatModal">
+  <div class="status-bar"><span class="time">13:34</span><span class="icons">📶 📡 🔋</span></div>
+  <div class="chat-header">
+    <button class="back" onclick="closeChat()">← 뒤로</button>
+    <span class="title">🧑‍🌾 안농이</span>
+    <span style="width:40px"></span>
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg bot">안녕하세요, 할아버지! 저는 안농이예요 🧑‍🌾<br><br>오늘 작업 중 궁금하신 점이 있으시면 편하게 물어보세요!</div>
+  </div>
+  <div class="chat-input-bar">
+    <input type="text" id="chatInput" placeholder="안농이에게 물어보세요..." onkeydown="if(event.key==='Enter')sendChat()">
+    <button onclick="sendChat()">↑</button>
+  </div>
+</div>
+
+</div><!-- phone-screen -->
+</div><!-- phone-frame -->
+<div class="phone-label" style="font-size:10px;color:#444;margin-top:8px;font-family:var(--font)">iPhone 15 Pro · 안농밴드 v1.0 데모</div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(idx){
+  document.querySelectorAll('.tab-pane').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.nav-item').forEach((n,i)=>n.classList.toggle('active',i===idx));
+  document.querySelector('.app-content').scrollTop=0;
+}
+
+// Score animation
+setTimeout(()=>{
+  const circ=document.getElementById('scoreFg');
+  const target=82;
+  const offset=377-(377*target/100);
+  circ.style.transform='rotate(-90deg)';
+  circ.style.transformOrigin='center';
+  circ.style.strokeDashoffset=offset;
+  // Count up
+  let c=0;
+  const iv=setInterval(()=>{
+    c+=2;if(c>target)c=target;
+    document.getElementById('scoreNum').textContent=c;
+    if(c>=target)clearInterval(iv);
+  },30);
+},600);
+
+// HR simulation
+setInterval(()=>{
+  document.getElementById('userHr').textContent=65+Math.floor(Math.random()*20);
+},2500);
+
+// Chat
+const GEMINI_KEY="AIzaSyCzfD41KgLCmnjmBqOQSTKHE5o5sswkm60";
+function openChat(){document.getElementById('chatModal').classList.add('open')}
+function closeChat(){document.getElementById('chatModal').classList.remove('open')}
+
+async function sendChat(){
+  const input=document.getElementById('chatInput');
+  const msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+  
+  const container=document.getElementById('chatMessages');
+  // User message
+  const userDiv=document.createElement('div');
+  userDiv.className='chat-msg user';
+  userDiv.textContent=msg;
+  container.appendChild(userDiv);
+  
+  // Loading
+  const loadDiv=document.createElement('div');
+  loadDiv.className='chat-msg bot loading';
+  loadDiv.textContent='안농이가 생각 중...';
+  container.appendChild(loadDiv);
+  container.scrollTop=container.scrollHeight;
+  
+  try{
+    const resp=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        system_instruction:{parts:[{text:`당신은 "안농이"입니다. 귀농 청년 캐릭터로 어르신 농업인의 건강을 챙기는 AI 건강 대화 도우미입니다.
+규칙:
+- 항상 존댓말 사용, "할아버지/할머니" 호칭 사용
+- 3턴 이내로 대화 마무리
+- 농작업 중 근골격계 건강, 스트레칭, 예방운동에 대해 조언
+- 농진청 공식 예방운동만 추천 (팔교차당기기, 허리뒤틀기, 전신뻗기 등)
+- 현재 사용자: 김농부님(68세), 고추 농사, 오늘 반복동작 142회, 심박 72BPM
+- 따뜻하고 친근한 말투, 이모지 적절히 사용
+- 짧고 간결하게 답변 (3~4문장 이내)`}]},
+        contents:[{role:'user',parts:[{text:msg}]}]
+      })
+    });
+    const data=await resp.json();
+    const reply=data.candidates?.[0]?.content?.parts?.[0]?.text||'죄송해요, 잠시 후 다시 말씀해주세요 😊';
+    loadDiv.className='chat-msg bot';
+    loadDiv.textContent=reply;
+  }catch(e){
+    loadDiv.className='chat-msg bot';
+    loadDiv.textContent='네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요 😊';
+  }
+  container.scrollTop=container.scrollHeight;
+}
+
+// Update time
+function updateTime(){
+  const now=new Date();
+  const h=String(now.getHours()).padStart(2,'0');
+  const m=String(now.getMinutes()).padStart(2,'0');
+  document.querySelectorAll('.status-bar .time').forEach(el=>el.textContent=h+':'+m);
+}
+updateTime();
+setInterval(updateTime,30000);
+</script>
+</body>
+</html>

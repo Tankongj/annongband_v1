@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>안농밴드 — 농업인 건강·안전 IoT 통합 관리 시스템</title>
+<meta name="description" content="안농밴드: 웨어러블 IoT 기반 농업인 건강·안전 통합 관리 시스템. NH농협 오픈이노베이션 제안 프로토타입.">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--card:#141414;--card-hover:#1c1c1c;--border:#222;--text:#fff;--text2:#999;--accent:#FF6B35;--green:#2E7D32;--blue:#2383e2;--font:'Pretendard Variable','Pretendard',-apple-system,sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* Hero */
+.hero{text-align:center;padding:80px 20px 60px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at center,rgba(255,107,53,.06) 0%,transparent 50%);animation:glow 8s ease-in-out infinite alternate}
+@keyframes glow{0%{transform:translate(-10%,-10%)}100%{transform:translate(10%,10%)}}
+.hero-badge{display:inline-block;background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.2);color:var(--accent);font-size:12px;font-weight:700;padding:6px 16px;border-radius:20px;margin-bottom:20px;letter-spacing:1px}
+.hero h1{font-size:clamp(32px,6vw,56px);font-weight:900;line-height:1.2;margin-bottom:16px}
+.hero h1 span{background:linear-gradient(135deg,var(--accent),#FFC107);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero p{font-size:clamp(14px,2vw,18px);color:var(--text2);max-width:600px;margin:0 auto 32px;line-height:1.7}
+.hero-stats{display:flex;justify-content:center;gap:32px;flex-wrap:wrap;margin-bottom:40px}
+.hero-stat{text-align:center}
+.hero-stat .num{font-size:28px;font-weight:900;color:var(--accent)}
+.hero-stat .label{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* App Cards */
+.section{max-width:1000px;margin:0 auto;padding:0 20px 80px}
+.section-title{text-align:center;font-size:14px;color:var(--accent);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.section-heading{text-align:center;font-size:28px;font-weight:800;margin-bottom:40px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;transition:all .25s ease;cursor:pointer;text-decoration:none;color:var(--text);display:block;position:relative;overflow:hidden}
+.card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 12px 40px rgba(255,107,53,.1)}
+.card::after{content:'→';position:absolute;top:28px;right:28px;font-size:18px;color:var(--text2);transition:transform .2s,color .2s}
+.card:hover::after{transform:translateX(4px);color:var(--accent)}
+.card-icon{font-size:36px;margin-bottom:12px}
+.card-badge{display:inline-block;font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;margin-bottom:10px}
+.card-title{font-size:18px;font-weight:700;margin-bottom:6px}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.6}
+.card-features{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.card-features span{font-size:10px;padding:3px 8px;border-radius:4px;background:rgba(255,255,255,.06);color:var(--text2)}
+
+/* Tech Stack */
+.tech-section{background:var(--card);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:40px 20px}
+.tech-grid{max-width:800px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;text-align:center}
+.tech-item{padding:16px;border-radius:8px;background:rgba(255,255,255,.03)}
+.tech-item .emoji{font-size:24px}
+.tech-item .name{font-size:13px;font-weight:600;margin-top:6px}
+.tech-item .desc{font-size:11px;color:var(--text2);margin-top:2px}
+
+/* Pipeline */
+.pipeline{max-width:800px;margin:0 auto;padding:40px 20px 60px}
+.pipeline-title{text-align:center;font-size:14px;color:var(--accent);font-weight:700;letter-spacing:2px;margin-bottom:24px}
+.pipeline-flow{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.pipeline-step{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;text-align:center;min-width:120px}
+.pipeline-step .emoji{font-size:20px}
+.pipeline-step .name{font-size:11px;font-weight:600;margin-top:4px}
+.pipeline-arrow{color:var(--text2);font-size:16px}
+
+/* Footer */
+footer{text-align:center;padding:32px 20px;color:var(--text2);font-size:12px;border-top:1px solid var(--border)}
+footer a{color:var(--accent);text-decoration:none}
+
+/* Keyframes */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.card{animation:fadeUp .5s ease both}
+.card:nth-child(2){animation-delay:.1s}
+.card:nth-child(3){animation-delay:.2s}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="hero-badge">NH 오픈이노베이션 2026</div>
+  <h1>🌾 <span>안농밴드</span></h1>
+  <p>웨어러블 IoT 기반 농업인 건강·안전 통합 관리 시스템<br>
+  <strong>손목보호대 + IMU 센서 + AI = 30분마다 건강 넛지</strong></p>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="num">84.6%</div><div class="label">농업인 업무상 질병 중<br>근골격계 비율</div></div>
+    <div class="hero-stat"><div class="num">97.9%</div><div class="label">농업인안전보험<br>손해율</div></div>
+    <div class="hero-stat"><div class="num">210개</div><div class="label">작목별 예방운동<br>DB 수록</div></div>
+    <div class="hero-stat"><div class="num">5,194억</div><div class="label">연간 사회적<br>손실 비용</div></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-title">Interactive Demo</div>
+  <div class="section-heading">프로토타입 데모 체험</div>
+  <div class="cards">
+
+    <a class="card" href="./watch/">
+      <div class="card-icon">⌚</div>
+      <div class="card-badge" style="background:rgba(255,107,53,.15);color:#FF6B35">IoT 디바이스</div>
+      <div class="card-title">워치 앱 시뮬레이터</div>
+      <div class="card-desc">Apple Watch에서 동작하는 안농밴드 Standalone 앱. 실시간 심박 모니터링, 30분 넛지, Man-Down 감지 시뮬레이션.</div>
+      <div class="card-features">
+        <span>❤️ 심박 시뮬레이션</span>
+        <span>🔔 넛지 알림</span>
+        <span>🧘 미니 스트레칭</span>
+        <span>🚨 낙상 감지</span>
+        <span>📊 일일 요약</span>
+      </div>
+    </a>
+
+    <a class="card" href="./user/">
+      <div class="card-icon">📱</div>
+      <div class="card-badge" style="background:rgba(35,131,226,.15);color:#2383e2">모바일 앱</div>
+      <div class="card-title">사용자 대시보드</div>
+      <div class="card-desc">농업인 본인용 모바일 앱. 안농이(AI) 건강 대화, 작목별 운동 처방, NH안전보험 연결. Gemini API 실시간 연동.</div>
+      <div class="card-features">
+        <span>🧑‍🌾 안농이 AI 대화</span>
+        <span>📷 자세 분석</span>
+        <span>🎁 보험 연동</span>
+        <span>🏆 이행 점수</span>
+      </div>
+    </a>
+
+    <a class="card" href="./admin/">
+      <div class="card-icon">🖥️</div>
+      <div class="card-badge" style="background:rgba(46,125,50,.15);color:#2E7D32">웹 대시보드</div>
+      <div class="card-title">관리자 대시보드</div>
+      <div class="card-desc">Farm Worker 360. 농업기술센터·영농조합 관리자용 통합 관제. 32명 실시간 모니터링, 다크모드 지원.</div>
+      <div class="card-features">
+        <span>👥 32명 관제</span>
+        <span>📈 건강 분석</span>
+        <span>🛡️ 안전 관리</span>
+        <span>💰 보험 연계</span>
+        <span>🌙 다크모드</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<section class="tech-section">
+  <div class="section-title" style="margin-bottom:20px">System Architecture</div>
+  <div class="pipeline-flow" style="max-width:900px;margin:0 auto;margin-bottom:24px">
+    <div class="pipeline-step"><div class="emoji">📡</div><div class="name">안농밴드<br>(ESP32+IMU+PPG)</div></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step"><div class="emoji">⌚</div><div class="name">스마트워치<br>(BLE 릴레이)</div></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step"><div class="emoji">📱</div><div class="name">사용자 앱<br>(안농이 AI)</div></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step"><div class="emoji">☁️</div><div class="name">Cloud<br>(Farm Worker 360)</div></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step"><div class="emoji">🖥️</div><div class="name">관리자 대시보드<br>(통합 관제)</div></div>
+    <div class="pipeline-arrow">→</div>
+    <div class="pipeline-step"><div class="emoji">🛡️</div><div class="name">NH농협<br>(보험 연계)</div></div>
+  </div>
+  <div class="tech-grid">
+    <div class="tech-item"><div class="emoji">🔧</div><div class="name">ESP32-S3</div><div class="desc">Edge AI 온디바이스</div></div>
+    <div class="tech-item"><div class="emoji">📐</div><div class="name">IMU + PPG</div><div class="desc">HAR + 심박 센서</div></div>
+    <div class="tech-item"><div class="emoji">🤖</div><div class="name">Gemini AI</div><div class="desc">안농이 건강 대화</div></div>
+    <div class="tech-item"><div class="emoji">🧘</div><div class="name">210개 운동 DB</div><div class="desc">농진청 공식 예방운동</div></div>
+    <div class="tech-item"><div class="emoji">🛡️</div><div class="name">NH안전보험</div><div class="desc">이행 기반 할인</div></div>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 <strong>팜러닝</strong> · <a href="https://github.com/Tankongj/annongband_v1" target="_blank">GitHub</a></p>
+  <p style="margin-top:6px">NH [X StartUp] 오픈이노베이션 제안 프로토타입 · 비상업적 데모 목적</p>
+</footer>
+
+</body>
+</html>

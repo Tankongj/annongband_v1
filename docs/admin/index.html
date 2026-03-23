@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>안농밴드 — Farm Worker 360 관리자 대시보드</title>
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f7f6f3;--bg2:#fff;--bg3:#f1f1ef;--hover:#efefef;--border:#e8e8e5;--text:#37352f;--text2:#787774;--text3:#9b9a97;--accent:#2383e2;--green:#dbeddb;--green-t:#1f5f1f;--red:#ffe2dd;--red-t:#6e2b2b;--orange:#fadec9;--orange-t:#5c3a1a;--blue:#d3e5ef;--blue-t:#1a3d5c;--purple:#e8deee;--purple-t:#3d1f5c;--gray:#e9e9e7;--radius:8px;--shadow:0 1px 3px rgba(0,0,0,.04);--font:'Pretendard Variable','Pretendard',-apple-system,sans-serif}
+.dark{--bg:#191919;--bg2:#202020;--bg3:#2f2f2f;--hover:#353535;--border:#3a3a3a;--text:#ffffffde;--text2:#ffffff9e;--text3:#ffffff5e;--accent:#529cca;--green:#1f3d1f;--green-t:#8fdf8f;--red:#3d2120;--red-t:#ff9f9a;--orange:#3d2b1a;--orange-t:#ffc78a;--blue:#1f3a4d;--blue-t:#8fcfef;--purple:#2d1f3d;--purple-t:#c8aee0;--gray:#2f2f2f;--shadow:0 1px 3px rgba(0,0,0,.2)}
+html,body{font-family:var(--font);background:var(--bg);color:var(--text);height:100%;overflow:hidden;transition:background .15s,color .15s}
+a{color:var(--accent);text-decoration:none}
+
+/* Layout */
+.layout{display:flex;height:100vh}
+
+/* Sidebar */
+.sidebar{width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s,background .15s}
+.sidebar.collapsed{width:56px}
+.sidebar.collapsed .nav-label,.sidebar.collapsed .logo-text,.sidebar.collapsed .admin-info{display:none}
+.sidebar.collapsed .logo{justify-content:center}
+.logo{display:flex;align-items:center;gap:10px;padding:16px 16px 20px;font-size:15px;font-weight:700;cursor:pointer}
+.logo-icon{font-size:20px}
+.nav{flex:1;padding:0 8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text2);transition:all .12s;margin-bottom:2px}
+.nav-item:hover{background:var(--hover);color:var(--text)}
+.nav-item.active{background:var(--accent);color:#fff}
+.nav-item .icon{font-size:16px;width:20px;text-align:center}
+.admin-section{padding:12px 16px;border-top:1px solid var(--border)}
+.admin-info{font-size:12px;color:var(--text2)}
+.admin-name{font-size:13px;font-weight:600;color:var(--text)}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 24px;border-bottom:1px solid var(--border);background:var(--bg2);flex-shrink:0;transition:background .15s}
+.header-left{display:flex;align-items:center;gap:12px}
+.header-left h2{font-size:18px;font-weight:600}
+.toggle-sidebar{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2);padding:4px}
+.header-right{display:flex;align-items:center;gap:12px}
+.search-bar{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:13px;width:200px;color:var(--text);font-family:var(--font);outline:none;transition:border .15s}
+.search-bar:focus{border-color:var(--accent)}
+.dark-toggle{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:5px 10px;cursor:pointer;font-size:14px;transition:background .15s}
+.bell{font-size:18px;cursor:pointer;position:relative}
+.bell-dot{position:absolute;top:-2px;right:-4px;width:8px;height:8px;background:#e53935;border-radius:50%}
+
+/* Content area */
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.page{display:none;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* KPI Cards */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.kpi{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;transition:background .15s,transform .1s}
+.kpi:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.kpi-icon{font-size:20px;margin-bottom:6px}
+.kpi-value{font-size:28px;font-weight:800;margin:4px 0}
+.kpi-label{font-size:12px;color:var(--text2)}
+.kpi-trend{font-size:11px;margin-top:4px;font-weight:600}
+.kpi-trend.up{color:var(--green-t)}
+.kpi-trend.down{color:var(--red-t)}
+
+/* Cards */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:16px;transition:background .15s}
+.card-header{padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.card-body{padding:16px}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3-1{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+
+/* Table */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:8px 12px;color:var(--text2);font-weight:500;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap}
+th:hover{color:var(--text)}
+td{padding:8px 12px;border-bottom:1px solid var(--bg3);white-space:nowrap}
+tr:hover td{background:var(--hover)}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.status-dot.working{background:#4caf50}
+.status-dot.resting{background:#ffc107}
+.status-dot.offline{background:#bdbdbd}
+.grade-pill{display:inline-block;padding:2px 8px;border-radius:4px;font-weight:700;font-size:11px}
+
+/* Charts (CSS-only bar chart) */
+.bar-chart{display:flex;align-items:flex-end;gap:12px;height:120px;padding:12px 0}
+.bar-col{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.bar{width:100%;border-radius:4px 4px 0 0;transition:height .5s ease;min-height:4px}
+.bar-label{font-size:11px;color:var(--text2)}
+.bar-value{font-size:11px;font-weight:700}
+
+/* Line chart (SVG) */
+.line-chart-wrap{padding:8px 0}
+.line-chart-wrap svg{width:100%;height:120px}
+
+/* Pie chart (CSS) */
+.pie-chart{width:120px;height:120px;border-radius:50%;margin:0 auto;position:relative}
+.pie-legend{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.pie-legend-item{display:flex;align-items:center;gap:8px;font-size:13px}
+.pie-legend-dot{width:10px;height:10px;border-radius:50%}
+
+/* Body heatmap */
+.heatmap-container{display:flex;align-items:center;gap:24px;padding:12px}
+.heatmap-bars{flex:1;display:flex;flex-direction:column;gap:8px}
+.hm-row{display:flex;align-items:center;gap:8px}
+.hm-label{width:50px;font-size:12px;color:var(--text2);text-align:right}
+.hm-bar-bg{flex:1;height:20px;background:var(--bg3);border-radius:4px;overflow:hidden}
+.hm-bar-fill{height:100%;border-radius:4px;transition:width .8s ease}
+.hm-val{width:35px;font-size:12px;font-weight:600;text-align:right}
+
+/* Alert log */
+.alert-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bg3);font-size:13px}
+.alert-item:last-child{border-bottom:none}
+.alert-time{color:var(--text3);font-size:11px;width:70px;flex-shrink:0}
+.alert-badge{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;flex-shrink:0}
+.alert-text{flex:1;color:var(--text2)}
+
+/* WBGT gauge */
+.wbgt-gauge{text-align:center;padding:16px}
+.wbgt-bar{width:100%;height:24px;background:linear-gradient(90deg,#4caf50,#ffeb3b,#ff9800,#f44336);border-radius:12px;position:relative;margin:12px 0}
+.wbgt-marker{position:absolute;top:-4px;width:4px;height:32px;background:var(--text);border-radius:2px;transition:left .5s ease}
+.wbgt-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text2)}
+
+/* Escalation Protocol */
+.esc-steps{display:flex;gap:12px;margin:12px 0}
+.esc-step{flex:1;background:var(--bg3);border-radius:var(--radius);padding:12px;text-align:center;font-size:12px;line-height:1.5}
+.esc-step .step-num{font-size:18px;font-weight:800;margin-bottom:4px}
+.esc-step .step-time{font-size:10px;color:var(--text3)}
+
+/* Settings form */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+.form-input{width:100%;max-width:300px;padding:8px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--font);background:var(--bg);color:var(--text);outline:none}
+.form-input:focus{border-color:var(--accent)}
+.btn-save{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;font-family:var(--font);margin-top:8px}
+.btn-save:hover{opacity:.9}
+
+/* Modal */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.4);z-index:999;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border-radius:12px;width:500px;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.modal-header h3{font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text2)}
+.modal-body{padding:20px}
+
+/* Simulation button */
+.sim-btn{background:var(--red);color:var(--red-t);border:1px solid var(--border);padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);transition:transform .1s}
+.sim-btn:active{transform:scale(.97)}
+
+/* Responsive */
+@media(max-width:900px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.grid-2,.grid-3-1{grid-template-columns:1fr}}
+@media(max-width:600px){.sidebar{position:fixed;z-index:100;left:-240px}.sidebar.open{left:0}}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="logo" onclick="toggleSidebar()"><span class="logo-icon">🌾</span><span class="logo-text">안농밴드</span></div>
+  <div class="nav" id="navMenu">
+    <div class="nav-item active" onclick="goPage(0,this)"><span class="icon">📊</span><span class="nav-label">종합 대시보드</span></div>
+    <div class="nav-item" onclick="goPage(1,this)"><span class="icon">👥</span><span class="nav-label">작업자 관리</span></div>
+    <div class="nav-item" onclick="goPage(2,this)"><span class="icon">📈</span><span class="nav-label">건강 분석</span></div>
+    <div class="nav-item" onclick="goPage(3,this)"><span class="icon">🛡️</span><span class="nav-label">안전 관리</span></div>
+    <div class="nav-item" onclick="goPage(4,this)"><span class="icon">💰</span><span class="nav-label">보험 연계</span></div>
+    <div class="nav-item" onclick="goPage(5,this)"><span class="icon">⚙️</span><span class="nav-label">설정</span></div>
+  </div>
+  <div class="admin-section">
+    <div class="admin-name">👤 박관리자</div>
+    <div class="admin-info">충북 영동 농업기술센터</div>
+  </div>
+</div>
+
+<!-- Main -->
+<div class="main">
+<div class="header">
+  <div class="header-left">
+    <button class="toggle-sidebar" onclick="toggleSidebar()">☰</button>
+    <h2 id="pageTitle">📊 종합 대시보드</h2>
+  </div>
+  <div class="header-right">
+    <input type="text" class="search-bar" placeholder="🔍 작업자 검색...">
+    <div class="bell">🔔<span class="bell-dot"></span></div>
+    <button class="dark-toggle" onclick="toggleDark()" title="다크모드">🌙</button>
+  </div>
+</div>
+<div class="content">
+
+<!-- PAGE 0: Dashboard -->
+<div class="page active" id="page0">
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-value">28<span style="font-size:14px;color:var(--text2)">/32</span></div><div class="kpi-label">활성 작업자</div></div>
+    <div class="kpi"><div class="kpi-icon">🏆</div><div class="kpi-value">76.4</div><div class="kpi-label">평균 이행 점수</div><div class="kpi-trend up">▲ 3.2 전월비</div></div>
+    <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-value">0<span style="font-size:14px;color:var(--text2)">건</span></div><div class="kpi-label">Man-Down 이벤트 (이번 달)</div></div>
+    <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-value">72<span style="font-size:14px;color:var(--text2)">%</span></div><div class="kpi-label">평균 넛지 이행률</div><div class="kpi-trend up">▲ 5% 전월비</div></div>
+  </div>
+
+  <div class="grid-3-1">
+    <div class="card">
+      <div class="card-header">👥 실시간 작업자 현황 <span style="margin-left:auto;font-size:11px;color:var(--text3)">2초 간격 갱신</span></div>
+      <div class="card-body table-wrap">
+        <table>
+          <thead><tr><th>이름</th><th>상태</th><th>심박</th><th>작업시간</th><th>이행점수</th><th>작목</th><th>마지막 넛지</th></tr></thead>
+          <tbody id="workerTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-header">📊 이행 점수 분포</div>
+        <div class="card-body">
+          <div class="bar-chart" id="gradeChart"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">📈 주간 트렌드</div>
+        <div class="card-body line-chart-wrap" id="weeklyChart"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">🔔 최근 알림 <button class="sim-btn" style="margin-left:auto" onclick="simulateManDown()">🚨 Man-Down 시뮬레이션</button></div>
+    <div class="card-body" id="alertLog"></div>
+  </div>
+</div>
+
+<!-- PAGE 1: Workers -->
+<div class="page" id="page1">
+  <div class="card">
+    <div class="card-header">👥 전체 작업자 (32명) <div style="margin-left:auto;display:flex;gap:8px"><select class="form-input" style="width:auto;padding:4px 8px;font-size:12px" id="filterStatus"><option value="">전체 상태</option><option value="working">작업중</option><option value="resting">휴식</option><option value="offline">미착용</option></select><select class="form-input" style="width:auto;padding:4px 8px;font-size:12px" id="filterCrop"><option value="">전체 작목</option><option>고추</option><option>딸기</option><option>벼</option><option>사과</option><option>포도</option><option>토마토</option></select></div></div>
+    <div class="card-body table-wrap">
+      <table>
+        <thead><tr><th onclick="sortWorkers('name')">이름 ↕</th><th onclick="sortWorkers('age')">나이 ↕</th><th>성별</th><th onclick="sortWorkers('crop')">작목 ↕</th><th>디바이스</th><th>상태</th><th onclick="sortWorkers('score')">이행점수 ↕</th><th>등급</th></tr></thead>
+        <tbody id="fullWorkerTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 2: Health -->
+<div class="page" id="page2">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">🧍 부위별 통증 히트맵 (조직 전체)</div>
+      <div class="card-body">
+        <div class="heatmap-bars">
+          <div class="hm-row"><span class="hm-label">어깨</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:45%;background:#ef5350"></div></div><span class="hm-val">45%</span></div>
+          <div class="hm-row"><span class="hm-label">허리</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:38%;background:#ff9800"></div></div><span class="hm-val">38%</span></div>
+          <div class="hm-row"><span class="hm-label">무릎</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:12%;background:#ffc107"></div></div><span class="hm-val">12%</span></div>
+          <div class="hm-row"><span class="hm-label">손목</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:8%;background:#66bb6a"></div></div><span class="hm-val">8%</span></div>
+          <div class="hm-row"><span class="hm-label">기타</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:5%;background:#42a5f5"></div></div><span class="hm-val">5%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">🌾 작목별 근골격계 부담도</div>
+      <div class="card-body">
+        <div class="heatmap-bars">
+          <div class="hm-row"><span class="hm-label">고추</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:82%;background:var(--accent)"></div></div><span class="hm-val">82</span></div>
+          <div class="hm-row"><span class="hm-label">딸기</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:78%;background:var(--accent)"></div></div><span class="hm-val">78</span></div>
+          <div class="hm-row"><span class="hm-label">과수</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:71%;background:var(--accent)"></div></div><span class="hm-val">71</span></div>
+          <div class="hm-row"><span class="hm-label">벼</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:65%;background:var(--accent)"></div></div><span class="hm-val">65</span></div>
+          <div class="hm-row"><span class="hm-label">축산</span><div class="hm-bar-bg"><div class="hm-bar-fill" style="width:58%;background:var(--accent)"></div></div><span class="hm-val">58</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">📈 7일간 평균 피로도 추이</div>
+    <div class="card-body line-chart-wrap" id="fatigueChart"></div>
+  </div>
+</div>
+
+<!-- PAGE 3: Safety -->
+<div class="page" id="page3">
+  <div class="card">
+    <div class="card-header">🚨 Man-Down 3단계 에스컬레이션 프로토콜</div>
+    <div class="card-body">
+      <div class="esc-steps">
+        <div class="esc-step" style="border-left:3px solid #ffc107"><div class="step-num">1단계</div>디바이스 진동 3회<br>+ LED 적색 점멸<div class="step-time">0~15초</div></div>
+        <div class="esc-step" style="border-left:3px solid #ff9800"><div class="step-num">2단계</div>관리자에게<br>푸시 알림 전송<div class="step-time">15~60초</div></div>
+        <div class="esc-step" style="border-left:3px solid #f44336"><div class="step-num">3단계</div>비상연락처<br>SMS 발송<div class="step-time">60초+</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">📋 Man-Down 이벤트 로그</div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>날짜</th><th>작업자</th><th>단계</th><th>대응</th></tr></thead>
+          <tbody>
+            <tr><td>03/18</td><td>이영희</td><td><span class="grade-pill" style="background:var(--orange);color:var(--orange-t)">2단계</span></td><td>본인 취소 (쪼그리기)</td></tr>
+            <tr><td>03/10</td><td>정수암</td><td><span class="grade-pill" style="background:var(--red);color:var(--red-t)">3단계</span></td><td>관리자 출동·경미 부상</td></tr>
+            <tr><td>02/28</td><td>김순자</td><td><span class="grade-pill" style="background:var(--green);color:var(--green-t)">1단계</span></td><td>본인 해제</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">🌡️ 온열질환 경보 (WBGT)</div>
+      <div class="card-body wbgt-gauge">
+        <div style="font-size:32px;font-weight:800">28°C</div>
+        <div style="font-size:12px;color:var(--text2)">현재 WBGT 지수</div>
+        <div class="wbgt-bar"><div class="wbgt-marker" style="left:40%"></div></div>
+        <div class="wbgt-labels"><span>21°C 안전</span><span>25°C 주의</span><span>28°C 경고</span><span>31°C 위험</span><span>33°C+</span></div>
+        <div style="margin-top:8px;font-size:12px;color:var(--orange-t);background:var(--orange);padding:6px 12px;border-radius:6px;display:inline-block">⚠️ 경고 단계 — 매시간 10분 휴식 권고</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 4: Insurance -->
+<div class="page" id="page4">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">🛡️ NH안전보험 가입 현황</div>
+      <div class="card-body" style="text-align:center">
+        <div class="pie-chart" style="background:conic-gradient(#4caf50 0deg 315deg, #bdbdbd 315deg 360deg)"></div>
+        <div class="pie-legend">
+          <div class="pie-legend-item"><div class="pie-legend-dot" style="background:#4caf50"></div>가입 28명 (87.5%)</div>
+          <div class="pie-legend-item"><div class="pie-legend-dot" style="background:#bdbdbd"></div>미가입 4명 (12.5%)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">📊 등급별 예상 할인율</div>
+      <div class="card-body">
+        <table>
+          <thead><tr><th>등급</th><th>점수</th><th>인원</th><th>할인율</th><th>월 혜택</th></tr></thead>
+          <tbody>
+            <tr><td><span class="grade-pill" style="background:#FF6B35;color:#fff">S</span></td><td>90+</td><td>4명</td><td>7%</td><td>7,000원</td></tr>
+            <tr><td><span class="grade-pill" style="background:#FFC107;color:#000">A</span></td><td>80~89</td><td>8명</td><td>5%</td><td>5,000원</td></tr>
+            <tr><td><span class="grade-pill" style="background:#4CAF50;color:#fff">B</span></td><td>70~79</td><td>12명</td><td>3%</td><td>3,000원</td></tr>
+            <tr><td><span class="grade-pill" style="background:#90A4AE;color:#fff">C</span></td><td>60~69</td><td>5명</td><td>1%</td><td>2,000원</td></tr>
+            <tr><td><span class="grade-pill" style="background:#BDBDBD;color:#fff">D</span></td><td>~59</td><td>3명</td><td>0%</td><td>—</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📋 월별 리워드 지급 요약</div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>월</th><th>대상 인원</th><th>쿠폰 총액</th><th>포인트 총액</th><th>합계</th></tr></thead>
+        <tbody>
+          <tr><td>2026.03</td><td>24명</td><td>120,000원</td><td>48,000P</td><td><strong>168,000원</strong></td></tr>
+          <tr><td>2026.02</td><td>22명</td><td>110,000원</td><td>44,000P</td><td><strong>154,000원</strong></td></tr>
+          <tr><td>2026.01</td><td>20명</td><td>100,000원</td><td>40,000P</td><td><strong>140,000원</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">📊 PowerBI 연동</div>
+    <div class="card-body" style="text-align:center;padding:30px;color:var(--text3)">
+      <div style="font-size:40px;margin-bottom:8px">📊</div>
+      <div style="font-size:14px">PowerBI 대시보드 연동 준비 중</div>
+      <div style="font-size:12px;margin-top:4px">Phase 3에서 NH농협생명 API와 직접 연동 예정</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE 5: Settings -->
+<div class="page" id="page5">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">⚙️ 넛지 설정</div>
+      <div class="card-body">
+        <div class="form-group"><label>넛지 간격 (분)</label><input type="number" class="form-input" value="30" min="10" max="120"></div>
+        <div class="form-group"><label>넛지 메시지 템플릿</label><input type="text" class="form-input" value="{이름}님, {부위} 스트레칭 한번 해볼까요?" style="max-width:100%"></div>
+        <div class="form-group"><label>Man-Down 1단계 대기 시간 (초)</label><input type="number" class="form-input" value="15" min="5" max="30"></div>
+        <div class="form-group"><label>Man-Down 2단계 대기 시간 (초)</label><input type="number" class="form-input" value="60" min="15" max="120"></div>
+        <button class="btn-save">💾 저장</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">📞 알림 수신자 설정</div>
+      <div class="card-body">
+        <div class="form-group"><label>관리자 연락처</label><input type="tel" class="form-input" value="010-1234-5678"></div>
+        <div class="form-group"><label>비상연락처 1</label><input type="tel" class="form-input" value="010-9876-5432"></div>
+        <div class="form-group"><label>비상연락처 2 (119)</label><input type="tel" class="form-input" value="119"></div>
+        <button class="btn-save">💾 저장</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header">🎨 디스플레이</div>
+    <div class="card-body">
+      <div class="form-group"><label>테마</label>
+        <select class="form-input" onchange="if(this.value==='dark')document.documentElement.classList.add('dark');else document.documentElement.classList.remove('dark');">
+          <option value="light">☀️ 라이트 모드</option>
+          <option value="dark">🌙 다크 모드</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- content -->
+</div><!-- main -->
+</div><!-- layout -->
+
+<!-- Worker Detail Modal -->
+<div class="modal-overlay" id="workerModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="modalTitle">작업자 상세</h3><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// Data
+const NAMES_F=["김순자","이영희","박옥순","최정숙","정미영","한경자","오복순","강윤희","조은정","신명자","유경미","임선영"];
+const NAMES_M=["박용수","정수암","이철호","김영배","송대현","최병렬","한동수","윤재호","장기선","오상근","허남일","배진수","문필규","고재윤","남기환","서창민","임태근","홍석진","안병국","양승호"];
+const CROPS=["고추","딸기","벼","사과","포도","토마토","고추","딸기","벼","사과","포도","토마토","고추","딸기","고추","딸기","벼","사과","고추","벼","사과","포도","토마토","고추","딸기","벼","사과","포도","토마토","고추","딸기","벼"];
+const STATUSES=["working","working","working","working","working","resting","working","working","resting","working","working","working","working","working","offline","working","resting","working","working","working","working","working","working","working","offline","working","working","resting","working","offline","working","working"];
+const workers=[];
+for(let i=0;i<32;i++){
+  const isFemale=i<12;
+  const name=isFemale?NAMES_F[i]:NAMES_M[i-12];
+  const age=55+Math.floor(Math.random()*24);
+  const score=45+Math.floor(Math.random()*51);
+  const grade=score>=90?'S':score>=80?'A':score>=70?'B':score>=60?'C':'D';
+  const hr=62+Math.floor(Math.random()*22);
+  workers.push({id:i+1,name,age,gender:isFemale?'여':'남',crop:CROPS[i],status:STATUSES[i],score,grade,hr,reps:50+Math.floor(Math.random()*200),workHours:(3+Math.random()*4).toFixed(1),device:'AB-'+String(i+1).padStart(3,'0'),lastNudge:['09:30','10:00','10:30','11:00','09:45','10:15'][i%6]});
+}
+
+const pageTitles=['📊 종합 대시보드','👥 작업자 관리','📈 건강 분석','🛡️ 안전 관리','💰 보험 연계','⚙️ 설정'];
+
+function goPage(idx,el){
+  document.querySelectorAll('.page').forEach((p,i)=>p.classList.toggle('active',i===idx));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').textContent=pageTitles[idx];
+}
+
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('collapsed')}
+function toggleDark(){
+  document.documentElement.classList.toggle('dark');
+  localStorage.setItem('dark',document.documentElement.classList.contains('dark'));
+}
+if(localStorage.getItem('dark')==='true')document.documentElement.classList.add('dark');
+
+// Render worker table (dashboard)
+function renderDashTable(){
+  const tbody=document.getElementById('workerTable');
+  tbody.innerHTML=workers.slice(0,12).map(w=>{
+    const statusLabel={working:'작업중',resting:'휴식',offline:'미착용'}[w.status];
+    const gradeColors={S:'#FF6B35',A:'#FFC107',B:'#4CAF50',C:'#90A4AE',D:'#BDBDBD'};
+    return `<tr onclick="openWorkerModal(${w.id-1})" style="cursor:pointer">
+      <td><strong>${w.name}</strong></td>
+      <td><span class="status-dot ${w.status}"></span>${statusLabel}</td>
+      <td class="hr-cell" data-id="${w.id}">${w.hr}</td>
+      <td>${w.workHours}h</td>
+      <td><span class="grade-pill" style="background:${gradeColors[w.grade]};color:${w.grade==='A'||w.grade==='D'?'#000':'#fff'}">${w.grade} ${w.score}</span></td>
+      <td>${w.crop}</td>
+      <td>${w.lastNudge}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFullTable(){
+  const status=document.getElementById('filterStatus')?.value||'';
+  const crop=document.getElementById('filterCrop')?.value||'';
+  let filtered=workers.filter(w=>(!status||w.status===status)&&(!crop||w.crop===crop));
+  const tbody=document.getElementById('fullWorkerTable');
+  const gradeColors={S:'#FF6B35',A:'#FFC107',B:'#4CAF50',C:'#90A4AE',D:'#BDBDBD'};
+  const statusLabel={working:'작업중',resting:'휴식',offline:'미착용'};
+  tbody.innerHTML=filtered.map(w=>`<tr onclick="openWorkerModal(${w.id-1})" style="cursor:pointer">
+    <td><strong>${w.name}</strong></td><td>${w.age}</td><td>${w.gender}</td><td>${w.crop}</td>
+    <td style="font-size:11px;color:var(--text3)">${w.device}</td>
+    <td><span class="status-dot ${w.status}"></span>${statusLabel[w.status]}</td>
+    <td>${w.score}</td>
+    <td><span class="grade-pill" style="background:${gradeColors[w.grade]};color:${['A','D'].includes(w.grade)?'#000':'#fff'}">${w.grade}</span></td>
+  </tr>`).join('');
+}
+
+let sortKey='',sortAsc=true;
+function sortWorkers(key){
+  if(sortKey===key)sortAsc=!sortAsc;else{sortKey=key;sortAsc=true;}
+  workers.sort((a,b)=>{
+    let va=a[key],vb=b[key];
+    if(typeof va==='string')return sortAsc?va.localeCompare(vb):vb.localeCompare(va);
+    return sortAsc?va-vb:vb-va;
+  });
+  renderFullTable();
+}
+
+document.getElementById('filterStatus')?.addEventListener('change',renderFullTable);
+document.getElementById('filterCrop')?.addEventListener('change',renderFullTable);
+
+// Grade chart
+function renderGradeChart(){
+  const grades={S:0,A:0,B:0,C:0,D:0};
+  workers.forEach(w=>grades[w.grade]++);
+  const max=Math.max(...Object.values(grades));
+  const colors={S:'#FF6B35',A:'#FFC107',B:'#4CAF50',C:'#90A4AE',D:'#BDBDBD'};
+  const container=document.getElementById('gradeChart');
+  container.innerHTML=Object.entries(grades).map(([g,v])=>`<div class="bar-col"><div class="bar-value">${v}명</div><div class="bar" style="height:${(v/max)*100}%;background:${colors[g]}"></div><div class="bar-label">${g}등급</div></div>`).join('');
+}
+
+// Weekly trend line chart
+function renderWeeklyChart(){
+  const data=[72,74,73,76,78,75,76.4];
+  const days=['월','화','수','목','금','토','일'];
+  const min=Math.min(...data)-5,max=Math.max(...data)+5;
+  const w=400,h=120,px=40,py=10;
+  const points=data.map((v,i)=>{
+    const x=px+i*((w-2*px)/(data.length-1));
+    const y=h-py-(v-min)/(max-min)*(h-2*py);
+    return `${x},${y}`;
+  });
+  document.getElementById('weeklyChart').innerHTML=`<svg viewBox="0 0 ${w} ${h}">
+    <polyline points="${points.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${data.map((v,i)=>{const[x,y]=points[i].split(',');return `<circle cx="${x}" cy="${y}" r="4" fill="var(--accent)"/><text x="${x}" y="${+y-8}" text-anchor="middle" font-size="10" fill="var(--text2)" font-weight="600">${v}</text><text x="${x}" y="${h-2}" text-anchor="middle" font-size="9" fill="var(--text3)">${days[i]}</text>`;}).join('')}
+  </svg>`;
+}
+
+function renderFatigueChart(){
+  const data=[45,52,48,55,60,53,50];
+  const days=['월','화','수','목','금','토','일'];
+  const min=30,max=70;
+  const w=400,h=120,px=40,py=10;
+  const points=data.map((v,i)=>{
+    const x=px+i*((w-2*px)/(data.length-1));
+    const y=h-py-(v-min)/(max-min)*(h-2*py);
+    return `${x},${y}`;
+  });
+  document.getElementById('fatigueChart').innerHTML=`<svg viewBox="0 0 ${w} ${h}">
+    <polyline points="${points.join(' ')}" fill="none" stroke="#ff9800" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    ${data.map((v,i)=>{const[x,y]=points[i].split(',');return `<circle cx="${x}" cy="${y}" r="4" fill="#ff9800"/><text x="${x}" y="${+y-8}" text-anchor="middle" font-size="10" fill="var(--text2)" font-weight="600">${v}</text><text x="${x}" y="${h-2}" text-anchor="middle" font-size="9" fill="var(--text3)">${days[i]}</text>`;}).join('')}
+  </svg>`;
+}
+
+// Alert log
+const alerts=[
+  {time:'11:02',type:'넛지',badge:'var(--blue)',badgeT:'var(--blue-t)',worker:'김순자',text:'어깨 스트레칭 이행 완료'},
+  {time:'10:45',type:'넛지',badge:'var(--orange)',badgeT:'var(--orange-t)',worker:'박용수',text:'넛지 응답 없음 (2회 연속)'},
+  {time:'10:30',type:'온열',badge:'var(--orange)',badgeT:'var(--orange-t)',worker:'시스템',text:'WBGT 28°C 경고 단계 진입'},
+  {time:'09:15',type:'넛지',badge:'var(--blue)',badgeT:'var(--blue-t)',worker:'이영희',text:'허리 스트레칭 이행 완료'},
+  {time:'08:50',type:'시스템',badge:'var(--green)',badgeT:'var(--green-t)',worker:'시스템',text:'28명 작업 시작 확인'},
+];
+function renderAlerts(){
+  document.getElementById('alertLog').innerHTML=alerts.map(a=>`<div class="alert-item">
+    <span class="alert-time">${a.time}</span>
+    <span class="alert-badge" style="background:${a.badge};color:${a.badgeT}">${a.type}</span>
+    <span style="font-weight:600;min-width:50px">${a.worker}</span>
+    <span class="alert-text">${a.text}</span>
+  </div>`).join('');
+}
+
+// Man-Down simulation
+function simulateManDown(){
+  const w=workers[Math.floor(Math.random()*workers.length)];
+  alerts.unshift({time:new Date().toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'}),type:'🚨 Man-Down',badge:'var(--red)',badgeT:'var(--red-t)',worker:w.name,text:`낙상 감지! 1단계 진동 발동 → 15초 대기 중...`});
+  renderAlerts();
+  setTimeout(()=>{
+    alerts.unshift({time:new Date().toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'}),type:'🚨 Man-Down',badge:'var(--red)',badgeT:'var(--red-t)',worker:w.name,text:`2단계: 관리자 푸시 알림 발송 (박관리자)`});
+    renderAlerts();
+  },3000);
+  setTimeout(()=>{
+    alerts.unshift({time:new Date().toLocaleTimeString('ko',{hour:'2-digit',minute:'2-digit'}),type:'해제',badge:'var(--green)',badgeT:'var(--green-t)',worker:w.name,text:`${w.name}님 본인 해제 — 정상 확인`});
+    renderAlerts();
+  },6000);
+}
+
+// Worker modal
+function openWorkerModal(idx){
+  const w=workers[idx];
+  document.getElementById('modalTitle').textContent=`👤 ${w.name} (${w.age}세 ${w.gender})`;
+  const weekScores=[w.score-5,w.score-3,w.score-1,w.score-2,w.score+1,w.score-1,w.score].map(s=>Math.max(0,Math.min(100,s)));
+  document.getElementById('modalBody').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+      <div style="background:var(--bg3);padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--text2)">작목</div><div style="font-size:16px;font-weight:700">${w.crop}</div></div>
+      <div style="background:var(--bg3);padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--text2)">디바이스</div><div style="font-size:16px;font-weight:700">${w.device}</div></div>
+      <div style="background:var(--bg3);padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--text2)">이행 점수</div><div style="font-size:24px;font-weight:800;color:var(--accent)">${w.score}점 (${w.grade})</div></div>
+      <div style="background:var(--bg3);padding:12px;border-radius:8px"><div style="font-size:11px;color:var(--text2)">심박수</div><div style="font-size:24px;font-weight:800;color:#e53935">❤️ ${w.hr} BPM</div></div>
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px">📈 7일 이행점수 추이</div>
+    <div style="display:flex;align-items:flex-end;gap:6px;height:60px;margin-bottom:16px">
+      ${weekScores.map((s,i)=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px"><div style="font-size:9px;font-weight:600">${s}</div><div style="width:100%;height:${s*0.5}px;background:var(--accent);border-radius:3px 3px 0 0;min-height:4px"></div><div style="font-size:8px;color:var(--text3)">${['월','화','수','목','금','토','일'][i]}</div></div>`).join('')}
+    </div>
+    <div style="font-size:13px;font-weight:600;margin-bottom:8px">📋 최근 활동</div>
+    <div style="font-size:12px;color:var(--text2);line-height:2">
+      ✅ 오늘 넛지 이행 ${Math.floor(Math.random()*3+2)}/5회<br>
+      🏃 반복 동작 ${w.reps}회<br>
+      ⏱️ 작업 시간 ${w.workHours}시간<br>
+      🧘 어깨 스트레칭 이행
+    </div>
+  `;
+  document.getElementById('workerModal').classList.add('open');
+}
+function closeModal(){document.getElementById('workerModal').classList.remove('open')}
+document.getElementById('workerModal').addEventListener('click',e=>{if(e.target===e.currentTarget)closeModal()});
+
+// HR simulation
+setInterval(()=>{
+  document.querySelectorAll('.hr-cell').forEach(cell=>{
+    const idx=+cell.dataset.id-1;
+    if(workers[idx].status!=='offline'){
+      workers[idx].hr=62+Math.floor(Math.random()*22);
+      cell.textContent=workers[idx].hr;
+    }
+  });
+},2000);
+
+// Init
+renderDashTable();
+renderFullTable();
+renderGradeChart();
+renderWeeklyChart();
+renderFatigueChart();
+renderAlerts();
+</script>
+</body>
+</html>

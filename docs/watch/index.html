@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>안농밴드 — Apple Watch Simulator</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css');
+:root{--bg:#111;--frame:#1a1a1a;--screen:#000;--green:#30d158;--red:#ff453a;--orange:#ff9f0a;--yellow:#ffd60a;--blue:#0a84ff;--white:#fff;--gray:#8e8e93;--card:rgba(255,255,255,.08)}
+body{font-family:'Pretendard Variable','SF Pro Display',-apple-system,sans-serif;background:var(--bg);color:var(--white);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;overflow-x:hidden}
+h1.logo{font-size:14px;font-weight:600;color:var(--gray);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.watch-container{position:relative;display:flex;align-items:center;gap:0}
+.watch-body{width:220px;height:270px;background:#2c2c2e;border-radius:50px;padding:18px;position:relative;box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05)}
+.watch-body::before{content:'';position:absolute;top:50%;right:-10px;transform:translateY(-50%);width:10px;height:44px;background:#3a3a3c;border-radius:0 4px 4px 0}
+.watch-body::after{content:'';position:absolute;top:calc(50% + 30px);right:-8px;transform:translateY(-50%);width:8px;height:22px;background:#3a3a3c;border-radius:0 3px 3px 0}
+.crown{position:absolute;top:50%;right:-14px;transform:translateY(-50%);width:14px;height:44px;background:linear-gradient(180deg,#4a4a4c,#3a3a3c);border-radius:0 6px 6px 0;cursor:pointer;z-index:5}
+.crown::after{content:'';position:absolute;top:8px;left:2px;right:2px;bottom:8px;border:1px solid rgba(255,255,255,.1);border-radius:3px}
+.screen{width:100%;height:100%;background:var(--screen);border-radius:34px;overflow:hidden;position:relative}
+.screen-content{width:100%;height:100%;position:relative}
+.slide{position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity .3s ease,transform .3s ease;transform:scale(.95);display:flex;flex-direction:column;align-items:center;padding:16px 12px;pointer-events:none}
+.slide.active{opacity:1;transform:scale(1);pointer-events:auto}
+.indicators{display:flex;gap:6px;margin-top:14px}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);cursor:pointer;transition:all .2s}
+.dot.active{background:var(--white);transform:scale(1.3)}
+.desc-panel{margin-top:16px;max-width:320px;text-align:center;color:var(--gray);font-size:12px;line-height:1.6;min-height:40px;transition:opacity .2s}
+.model-label{margin-top:12px;font-size:11px;color:rgba(255,255,255,.2);letter-spacing:1px}
+
+/* Slide 1: Monitor */
+.s1-status{font-size:10px;color:var(--green);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.s1-status .dot-live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse-dot 1.5s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
+.s1-hr{font-size:36px;font-weight:700;color:var(--red);display:flex;align-items:baseline;gap:4px;margin:4px 0}
+.s1-hr span{font-size:12px;color:var(--gray);font-weight:400}
+.s1-hr .heart{animation:heartbeat .8s infinite}
+@keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.s1-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:6px}
+.s1-stat{background:var(--card);border-radius:10px;padding:6px 8px;text-align:center}
+.s1-stat .val{font-size:16px;font-weight:600}
+.s1-stat .lbl{font-size:9px;color:var(--gray)}
+.s1-progress{width:100%;margin-top:8px}
+.s1-progress .bar-bg{width:100%;height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.s1-progress .bar-fill{height:100%;background:linear-gradient(90deg,var(--orange),var(--green));border-radius:3px;transition:width 1.5s ease-out}
+.s1-progress .lbl{font-size:9px;color:var(--gray);margin-top:3px;text-align:center}
+
+/* Slide 2: Nudge */
+.s2-vibrate{font-size:10px;color:var(--orange);margin-bottom:6px;animation:vibrate .3s linear 3}
+@keyframes vibrate{0%,100%{transform:translateX(0)}25%{transform:translateX(-2px)}75%{transform:translateX(2px)}}
+.s2-avatar{font-size:28px;margin:4px 0}
+.s2-msg{font-size:12px;line-height:1.6;text-align:center;color:rgba(255,255,255,.9);margin:6px 0;padding:8px;background:var(--card);border-radius:12px}
+.s2-btns{display:flex;flex-direction:column;gap:6px;width:100%;margin-top:4px}
+.s2-btn{border:none;border-radius:12px;padding:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:transform .1s}
+.s2-btn:active{transform:scale(.95)}
+.s2-btn.yes{background:var(--green);color:#000}
+.s2-btn.no{background:rgba(255,199,7,.8);color:#000}
+
+/* Slide 3: Stretch */
+.s3-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.s3-meta{font-size:10px;color:var(--gray);margin-bottom:10px}
+.s3-figure{font-size:48px;margin:6px 0;animation:stretch 2s ease-in-out infinite}
+@keyframes stretch{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-5deg) scale(1.05)}75%{transform:rotate(5deg) scale(1.05)}}
+.s3-timer-ring{position:relative;width:80px;height:80px}
+.s3-timer-ring svg{transform:rotate(-90deg)}
+.s3-timer-ring circle{fill:none;stroke-width:4}
+.s3-timer-ring .bg{stroke:rgba(255,255,255,.1)}
+.s3-timer-ring .fg{stroke:var(--green);stroke-linecap:round;transition:stroke-dashoffset .3s linear}
+.s3-timer-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:18px;font-weight:700}
+.s3-done-btn{margin-top:8px;background:var(--green);color:#000;border:none;border-radius:10px;padding:8px 24px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;display:none}
+.s3-toast{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:6px 16px;border-radius:16px;font-size:11px;font-weight:600;opacity:0;transition:opacity .3s}
+.s3-toast.show{opacity:1}
+
+/* Slide 4: Man-Down */
+.s4-alert{font-size:12px;font-weight:700;color:var(--red);margin-bottom:6px;animation:flash 0.5s infinite}
+@keyframes flash{0%,100%{opacity:1}50%{opacity:.3}}
+.s4-icon{font-size:40px;margin:4px 0}
+.s4-dots{display:flex;gap:8px;margin:6px 0}
+.s4-dots span{width:12px;height:12px;border-radius:50%;background:var(--red);animation:pulse-dot .6s infinite}
+.s4-dots span:nth-child(2){animation-delay:.2s}
+.s4-dots span:nth-child(3){animation-delay:.4s}
+.s4-desc{font-size:11px;color:rgba(255,255,255,.8);text-align:center;line-height:1.5;margin:4px 0}
+.s4-countdown{font-size:32px;font-weight:700;color:var(--red);margin:4px 0}
+.s4-cancel{background:rgba(255,255,255,.15);color:var(--white);border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:8px 20px;font-size:12px;cursor:pointer;font-family:inherit;margin-top:4px}
+.s4-status{font-size:11px;color:var(--orange);margin-top:6px;display:none}
+.watch-body.man-down{box-shadow:0 0 30px rgba(255,69,58,.4),0 8px 32px rgba(0,0,0,.5)}
+
+/* Slide 5: Summary */
+.s5-title{font-size:14px;font-weight:600;margin-bottom:8px}
+.s5-list{width:100%;display:flex;flex-direction:column;gap:5px}
+.s5-item{display:flex;justify-content:space-between;align-items:center;background:var(--card);border-radius:8px;padding:7px 10px}
+.s5-item .icon{font-size:16px}
+.s5-item .label{font-size:10px;color:var(--gray);flex:1;margin-left:8px}
+.s5-item .value{font-size:14px;font-weight:600}
+.s5-badge{margin-top:10px;background:linear-gradient(135deg,var(--orange),var(--yellow));color:#000;padding:8px 20px;border-radius:16px;font-size:12px;font-weight:700}
+</style>
+</head>
+<body>
+
+<h1 class="logo">안농밴드</h1>
+
+<div class="watch-container">
+  <div class="watch-body" id="watchBody">
+    <div class="crown" title="Digital Crown"></div>
+    <div class="screen">
+      <div class="screen-content" id="screenContent">
+
+        <!-- Slide 1: Main Monitor -->
+        <div class="slide active" id="slide0">
+          <div class="s1-status"><span class="dot-live"></span> 안농밴드 연결됨</div>
+          <div class="s1-hr"><span class="heart">❤️</span> <span id="hrValue">72</span> <span>BPM</span></div>
+          <div class="s1-stats">
+            <div class="s1-stat"><div class="val">🏃 <span id="repCount">0</span></div><div class="lbl">반복 횟수</div></div>
+            <div class="s1-stat"><div class="val">⏱️ <span id="workTime">00:00</span></div><div class="lbl">작업 시간</div></div>
+          </div>
+          <div class="s1-progress">
+            <div class="bar-bg"><div class="bar-fill" id="scoreBar" style="width:0%"></div></div>
+            <div class="lbl">이행 점수 <span id="scoreVal">0</span>/100</div>
+          </div>
+        </div>
+
+        <!-- Slide 2: Nudge -->
+        <div class="slide" id="slide1">
+          <div class="s2-vibrate">📳 진동 알림</div>
+          <div class="s2-avatar">🧑‍🌾</div>
+          <div class="s2-msg" id="nudgeMsg">"할아버지, 팔을 <span id="nudgeReps">142</span>번이나 들어올리셨어요! 어깨 스트레칭 한번 해볼까요?"</div>
+          <div class="s2-btns">
+            <button class="s2-btn yes" onclick="goSlide(2)">🟢 해볼게요</button>
+            <button class="s2-btn no" onclick="goSlide(0)">나중에</button>
+          </div>
+        </div>
+
+        <!-- Slide 3: Stretch -->
+        <div class="slide" id="slide2">
+          <div class="s3-title">팔교차당기기</div>
+          <div class="s3-meta">🟢 초급 · 어깨</div>
+          <div class="s3-figure">🧘</div>
+          <div class="s3-timer-ring">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle class="bg" cx="40" cy="40" r="36"/>
+              <circle class="fg" id="timerCircle" cx="40" cy="40" r="36" stroke-dasharray="226" stroke-dashoffset="0"/>
+            </svg>
+            <div class="s3-timer-text" id="timerText">12</div>
+          </div>
+          <button class="s3-done-btn" id="stretchStartBtn" onclick="startStretchTimer()">▶ 시작</button>
+          <div class="s3-toast" id="stretchToast">✅ 이행 점수 +3점!</div>
+        </div>
+
+        <!-- Slide 4: Man-Down -->
+        <div class="slide" id="slide3">
+          <div class="s4-alert">⚠️ 낙상 감지!</div>
+          <div class="s4-icon">🚨</div>
+          <div class="s4-dots"><span></span><span></span><span></span></div>
+          <div class="s4-desc" id="mdDesc">15초 후 관리자에게<br>알림이 전송됩니다</div>
+          <div class="s4-countdown" id="mdCountdown">15</div>
+          <button class="s4-cancel" id="mdCancel" onclick="cancelManDown()">괜찮아요 — 취소</button>
+          <div class="s4-status" id="mdStatus"></div>
+        </div>
+
+        <!-- Slide 5: Summary -->
+        <div class="slide" id="slide4">
+          <div class="s5-title">📊 오늘의 기록</div>
+          <div class="s5-list">
+            <div class="s5-item"><span class="icon">⏱️</span><span class="label">작업시간</span><span class="value">6h 23m</span></div>
+            <div class="s5-item"><span class="icon">🏃</span><span class="label">반복횟수</span><span class="value">847회</span></div>
+            <div class="s5-item"><span class="icon">❤️</span><span class="label">심박평균</span><span class="value">74 BPM</span></div>
+            <div class="s5-item"><span class="icon">✅</span><span class="label">넛지이행</span><span class="value">4/5</span></div>
+            <div class="s5-item"><span class="icon">🏆</span><span class="label">이행점수</span><span class="value" style="color:#30d158">82점</span></div>
+          </div>
+          <div class="s5-badge">🏆 잘하셨습니다!</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="indicators" id="indicators"></div>
+<div class="desc-panel" id="descPanel"></div>
+<div class="model-label">🍎 Apple Watch Series 10 · 안농밴드 v1.0</div>
+
+<script>
+const TOTAL_SLIDES = 5;
+let current = 0;
+let repCount = 0;
+let workSeconds = 0;
+let score = 78;
+let manDownTimer = null;
+let stretchTimer = null;
+let nudgeInterval = null;
+
+const descriptions = [
+  "실시간 모니터링 — IMU 센서와 PPG 센서가 농작업 중 동작 반복 횟수, 심박수를 실시간 측정합니다.",
+  "넛지 알림 — 30분마다 진동으로 휴식·스트레칭을 권유합니다. 안농이(AI)가 구체적 데이터를 기반으로 대화합니다.",
+  "미니 스트레칭 — 농진청 공식 예방운동 DB(210개)에서 현재 작업에 맞는 운동을 자동 추천합니다.",
+  "Man-Down 감지 — 급가속+무활동 패턴 감지 시 3단계 에스컬레이션(본인→관리자→비상연락처) 자동 발동.",
+  "오늘 요약 — 크래들 거치 시 Wi-Fi로 자동 업로드. 일일 건강·작업 리포트를 확인합니다."
+];
+
+// Init indicators
+const indContainer = document.getElementById('indicators');
+for(let i=0;i<TOTAL_SLIDES;i++){
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0?' active':'');
+  d.onclick = () => goSlide(i);
+  indContainer.appendChild(d);
+}
+document.getElementById('descPanel').textContent = descriptions[0];
+
+function goSlide(n){
+  if(n<0||n>=TOTAL_SLIDES) return;
+  document.querySelectorAll('.slide').forEach((s,i)=>{
+    s.classList.toggle('active', i===n);
+  });
+  document.querySelectorAll('.dot').forEach((d,i)=>{
+    d.classList.toggle('active', i===n);
+  });
+  document.getElementById('descPanel').textContent = descriptions[n];
+  current = n;
+  
+  // Trigger slide-specific actions
+  if(n===2) { // Stretch
+    resetStretchTimer();
+    document.getElementById('stretchStartBtn').style.display = 'block';
+  }
+  if(n===3) { // Man-Down
+    startManDown();
+  } else {
+    cancelManDown();
+  }
+  
+  document.getElementById('watchBody').classList.toggle('man-down', n===3);
+}
+
+// Swipe support
+let touchStartX = 0;
+document.getElementById('screenContent').addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+document.getElementById('screenContent').addEventListener('touchend', e => {
+  const diff = touchStartX - e.changedTouches[0].clientX;
+  if(Math.abs(diff) > 40){
+    if(diff > 0 && current < TOTAL_SLIDES-1) goSlide(current+1);
+    if(diff < 0 && current > 0) goSlide(current-1);
+  }
+});
+// Mouse drag
+let mouseDown = false, mouseStartX = 0;
+document.getElementById('screenContent').addEventListener('mousedown', e => { mouseDown=true; mouseStartX=e.clientX; });
+document.getElementById('screenContent').addEventListener('mouseup', e => {
+  if(!mouseDown) return; mouseDown=false;
+  const diff = mouseStartX - e.clientX;
+  if(Math.abs(diff) > 40){
+    if(diff > 0 && current < TOTAL_SLIDES-1) goSlide(current+1);
+    if(diff < 0 && current > 0) goSlide(current-1);
+  }
+});
+
+// Heartrate simulation
+setInterval(()=>{
+  const hr = 65 + Math.floor(Math.random()*20);
+  document.getElementById('hrValue').textContent = hr;
+}, 2000);
+
+// Repetition counter
+setInterval(()=>{
+  repCount += 1;
+  document.getElementById('repCount').textContent = repCount;
+  document.getElementById('nudgeReps').textContent = repCount;
+}, 4000 + Math.random()*4000);
+
+// Work timer
+setInterval(()=>{
+  workSeconds++;
+  const m = Math.floor(workSeconds/60);
+  const s = workSeconds%60;
+  document.getElementById('workTime').textContent = String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}, 1000);
+
+// Score animation on load
+setTimeout(()=>{
+  document.getElementById('scoreBar').style.width = score+'%';
+  document.getElementById('scoreVal').textContent = score;
+}, 500);
+
+// Nudge auto popup (every 30s for demo)
+nudgeInterval = setInterval(()=>{
+  if(current === 0) goSlide(1);
+}, 30000);
+
+// Stretch timer
+function resetStretchTimer(){
+  clearInterval(stretchTimer);
+  document.getElementById('timerText').textContent = '12';
+  document.getElementById('timerCircle').style.strokeDashoffset = '0';
+  document.getElementById('stretchToast').classList.remove('show');
+}
+function startStretchTimer(){
+  document.getElementById('stretchStartBtn').style.display = 'none';
+  let seconds = 12;
+  const circumference = 226;
+  stretchTimer = setInterval(()=>{
+    seconds--;
+    document.getElementById('timerText').textContent = seconds;
+    const offset = circumference * (1 - seconds/12);
+    document.getElementById('timerCircle').style.strokeDashoffset = offset;
+    if(seconds <= 0){
+      clearInterval(stretchTimer);
+      document.getElementById('timerText').textContent = '✓';
+      document.getElementById('stretchToast').classList.add('show');
+      score = Math.min(100, score+3);
+      document.getElementById('scoreBar').style.width = score+'%';
+      document.getElementById('scoreVal').textContent = score;
+      setTimeout(()=> document.getElementById('stretchToast').classList.remove('show'), 2000);
+    }
+  }, 1000);
+}
+
+// Man-Down
+function startManDown(){
+  cancelManDown();
+  let count = 15;
+  const el = document.getElementById('mdCountdown');
+  const desc = document.getElementById('mdDesc');
+  const status = document.getElementById('mdStatus');
+  const cancel = document.getElementById('mdCancel');
+  el.textContent = count;
+  desc.innerHTML = '15초 후 관리자에게<br>알림이 전송됩니다';
+  status.style.display = 'none';
+  cancel.style.display = 'block';
+  manDownTimer = setInterval(()=>{
+    count--;
+    el.textContent = count;
+    if(count <= 0){
+      clearInterval(manDownTimer);
+      el.textContent = '!';
+      desc.innerHTML = '관리자에게<br>알림 전송 완료';
+      status.textContent = '📡 관리자 알림 발송됨';
+      status.style.display = 'block';
+      cancel.style.display = 'none';
+    }
+  }, 1000);
+}
+function cancelManDown(){
+  clearInterval(manDownTimer);
+  document.getElementById('mdCountdown').textContent = '15';
+  document.getElementById('mdStatus').style.display = 'none';
+  document.getElementById('mdCancel').style.display = 'block';
+}
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if(e.key==='ArrowRight' && current<TOTAL_SLIDES-1) goSlide(current+1);
+  if(e.key==='ArrowLeft' && current>0) goSlide(current-1);
+});
+</script>
+</body>
+</html>
